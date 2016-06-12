@@ -9,15 +9,20 @@ function preload(){
 	game.load.image('brick2', 'assets/brick2.png');
 	game.load.image('brick3', 'assets/brick3.png');
 	game.load.image('brick4', 'assets/brick4.png');
-
 }
 
 var bricks;
 var paddle;
 var ball;
+
 var bop = true;
+
 var lvl=.3;
 var score=0;
+var lives=3;
+var granica = 1000;
+
+var livesText;
 
 
 
@@ -26,6 +31,7 @@ function create(){
 
 
 	ESC = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
+
 
 
 
@@ -61,6 +67,7 @@ function create(){
 	bricks.physicsBodyType = Phaser.Physics.ARCADE;
 
 	// fx to startowe x dla cegieł a fy to ilość rzędów
+	// zabiję Cię Burtk XD
 	var fx= (((game.world.width-((Math.floor(game.world.width/36)-3)*36)))/2);
 	var fy= (Math.floor((Math.floor(game.world.height/52))));
 	var cegua;
@@ -73,8 +80,11 @@ function create(){
 	}
 
 	 game.input.onDown.add(releaseBall, this);
-	 scoreText = game.add.text(10, 10, 'Wynik: 0', { font: "20px Arial", fill: "#ffffff", align: "left" });
 
+	 // gdzieś Ty tą zmienną to nawet ja nie
+	 glownyText = game.add.text((1/3)*game.world.width,paddle.y-((1/2)*game.world.centerY), 'Kliknij by zacząć', { font: "70px Arial", fill: "#db0101", align: "left" });
+	 scoreText = game.add.text(10, 10, 'Wynik: 0', { font: "20px Arial", fill: "#ffffff", align: "left" });
+	 livesText = game.add.text(game.world.width-100,10, 'Życia: ' + lives, { font: "20px Arial", fill: "#ffffff", align: "left" });
 }
 
 
@@ -101,13 +111,30 @@ function update(){
     	game.physics.arcade.collide(ball, paddle, ballpaddle, null, this);
     }
 
-
-
+    //nie chciało ogarniać jak w przykładzie więc coś takiego :/
+    if(ball.y > paddle.y+100)
+    {
+    	ballLost();
+    }
 }
 
+// jak będzie menu to poziom trudności by się przydało i wtedy tutaj zmiany z punktacją
 function destruct(ball,brick){
 	score+=100;
-	scoreText.text = 'score: ' + score;
+	scoreText.text = 'Wynik: ' + score;
+
+	// życie co ileś punktuff
+	if(score == granica)
+	{
+		granica+=10000;
+		lives ++;
+		livesText.text = 'Życia: ' + lives;
+		lvl+=lvl*.1;
+		var f = Math.floor(game.world.height*lvl);
+		ball.body.velocity.y=f;
+		
+	}
+
 	brick.kill();
 }
 
@@ -117,6 +144,27 @@ function randomBrick(){
 
 }
 
+function ballLost(){
+
+    	lives --;
+    	livesText.text = 'Życia: ' + lives;
+    	bop = true;
+        ball.reset(paddle.x, paddle.y - 10);
+        if(lives==0)
+        {
+        	ball.kill();
+        	glownyText.text = 'Przegrana';
+        	glownyText.visible = true;
+        	kom1Text = game.add.text((1/2)*game.world.centerX,glownyText.y+100,'Kliknij by spróbować ponownie', { font: "20px Arial", fill: "#db0101", align: "left" });
+        	game.input.onDown.add(refresh, this);
+        }
+}
+
+function refresh()
+{
+	location.reload();
+}
+
 
 function randomInterval(min,max)
 {
@@ -124,15 +172,14 @@ function randomInterval(min,max)
 }
 
 
-function releaseBall () {
+function releaseBall(){
 
-
+	glownyText.visible = false;
     if (bop){
         bop = false;
         var f = Math.floor(game.world.height*lvl);
         ball.body.velocity.y = -f;
     }
-
 }
 
 function ballpaddle(ball,paddle){
@@ -151,7 +198,6 @@ function ballpaddle(ball,paddle){
     }
     else
     {
-
         ball.body.velocity.x = 2 + Math.random() * 8;
     }
 }
